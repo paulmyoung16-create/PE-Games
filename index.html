@@ -2,54 +2,350 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PE Game Test</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Higher PE: Match the Method</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  * { box-sizing: border-box; }
-  body { margin: 0; font-family: Arial, sans-serif; background: #f1f5f9; color: #172033; display: grid; place-items: center; min-height: 100vh; padding: 20px; }
-  .card { width: min(100%, 460px); background: white; border-radius: 18px; padding: 30px; box-shadow: 0 8px 28px #17203318; text-align: center; }
-  h1 { margin: 0 0 10px; color: #173b6c; }
-  p { line-height: 1.5; color: #4b5563; }
-  label { display: block; text-align: left; font-weight: bold; margin: 22px 0 8px; }
-  input { width: 100%; padding: 13px 14px; border: 2px solid #cbd5e1; border-radius: 10px; font-size: 16px; }
-  input:focus { outline: 3px solid #bfdbfe; border-color: #2563eb; }
-  button { width: 100%; margin-top: 14px; padding: 14px; border: 0; border-radius: 10px; background: #1d4f91; color: white; font-size: 16px; font-weight: bold; cursor: pointer; }
-  button:hover { background: #163e73; }
-  #result { display: none; margin-top: 22px; padding: 18px; border-radius: 12px; background: #dcfce7; color: #166534; font-size: 18px; font-weight: bold; }
-  .points { margin-top: 18px; font-size: 14px; color: #64748b; }
+:root{
+  --floor:#d9a66a; --floor2:#c9935a; --ink:#1d1a16; --paper:#fffdf8; --muted:#5b4f42;
+  --phys:#d7263d; --ment:#1b6ca8; --soc:#1e8c4e; --emo:#e0a800;
+  --line:rgba(255,255,255,.55);
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --floor:#4a3522; --floor2:#3f2d1d; --ink:#f5eee4; --paper:#2a2119; --muted:#cbb9a3; --line:rgba(255,255,255,.18); }
+}
+:root[data-theme="dark"]{ --floor:#4a3522; --floor2:#3f2d1d; --ink:#f5eee4; --paper:#2a2119; --muted:#cbb9a3; --line:rgba(255,255,255,.18); }
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{
+  margin:0; color:var(--ink); font-family:"Barlow",system-ui,sans-serif; font-size:17px; line-height:1.5;
+  background-color:var(--floor);
+  background-image:repeating-linear-gradient(90deg,var(--floor) 0 46px,var(--floor2) 46px 48px);
+  min-height:100vh;
+}
+.wrap{max-width:1000px;margin:0 auto;padding:24px 18px 60px}
+h1,h2,h3{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:800;line-height:1.05;margin:0}
+header.hero{position:relative;padding:26px 0 18px}
+header.hero h1{font-size:clamp(44px,9vw,92px);letter-spacing:-.01em}
+header.hero p{margin:8px 0 0;max-width:56ch;color:var(--muted);font-weight:500}
+.stripes{display:flex;gap:6px;margin-top:18px}
+.stripes span{height:8px;flex:1;border-radius:2px}
+.s-phys{background:var(--phys)}.s-ment{background:var(--ment)}.s-soc{background:var(--soc)}.s-emo{background:var(--emo)}
+
+nav.modes{display:flex;gap:8px;flex-wrap:wrap;margin:22px 0 18px}
+nav.modes button{
+  font:600 20px "Barlow Condensed",sans-serif; padding:8px 18px; border-radius:999px; cursor:pointer;
+  border:2px solid var(--ink); background:transparent; color:var(--ink);
+}
+nav.modes button[aria-pressed="true"]{background:var(--ink);color:var(--floor)}
+button:focus-visible,.card:focus-visible,.zone:focus-visible{outline:3px solid var(--ment);outline-offset:3px}
+
+.panel{display:none}.panel.on{display:block}
+
+/* scoreboard */
+.board{display:flex;gap:10px;flex-wrap:wrap;align-items:stretch;margin-bottom:16px}
+.stat{background:#141414;color:#ffcf3f;border-radius:8px;padding:6px 14px;min-width:96px}
+.stat small{display:block;color:#bbb;font-size:13px}
+.stat b{font:800 30px "Barlow Condensed",sans-serif;letter-spacing:.04em}
+.board .grow{flex:1}
+.btn{font:600 19px "Barlow Condensed",sans-serif;padding:10px 20px;border-radius:8px;border:none;background:var(--ink);color:var(--floor);cursor:pointer}
+.btn.alt{background:transparent;border:2px solid var(--ink);color:var(--ink)}
+
+/* tray + cards */
+.tray{display:flex;flex-wrap:wrap;gap:10px;min-height:70px;padding:12px;border:2px dashed var(--line);border-radius:10px;margin-bottom:18px}
+.tray:empty::after{content:"All cards placed.";color:var(--muted);align-self:center}
+.card{
+  background:var(--paper);color:var(--ink);border-radius:6px;padding:10px 12px;max-width:260px;
+  box-shadow:0 2px 0 rgba(0,0,0,.25);cursor:grab;user-select:none;font-weight:600;font-size:15px;line-height:1.3;
+  border-left:6px solid #888; touch-action:manipulation;
+}
+.card small{display:block;font-weight:400;color:var(--muted);font-size:13px;margin-top:3px}
+.card.sel{outline:3px solid var(--ink);transform:translateY(-3px)}
+.card.placed{cursor:default;box-shadow:none}
+.card.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-6px)}50%{transform:translateX(6px)}75%{transform:translateX(-3px)}}
+
+.zones{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:640px){.zones{grid-template-columns:1fr}}
+.zone{border:3px solid var(--c);border-radius:10px;padding:12px;min-height:150px;background:color-mix(in srgb,var(--c) 12%,transparent);cursor:pointer}
+.zone h2{font-size:30px;color:var(--c)}
+.zone .slot{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.zone.over{background:color-mix(in srgb,var(--c) 30%,transparent)}
+.zone .card{border-left-color:var(--c)}
+.zone.z-emo h2{color:#7a5a00}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .zone.z-emo h2{color:var(--emo)}}
+.z-phys{--c:var(--phys)}.z-ment{--c:var(--ment)}.z-soc{--c:var(--soc)}.z-emo{--c:var(--emo)}
+.hint{color:var(--muted);font-size:15px;margin:0 0 10px}
+
+/* quick fire */
+.qf-stage{background:var(--paper);border-radius:12px;padding:26px 20px;text-align:center;margin-bottom:16px;min-height:170px;display:flex;flex-direction:column;justify-content:center}
+.qf-stage .kind{color:var(--muted);font-size:15px}
+.qf-stage .q{font:800 clamp(26px,5vw,40px) "Barlow Condensed",sans-serif;margin-top:6px}
+.answers{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media (max-width:640px){.answers{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.answers button{font:800 24px "Barlow Condensed",sans-serif;padding:18px 8px;border-radius:10px;border:none;color:#fff;cursor:pointer;background:var(--c)}
+.answers button:disabled{opacity:.45;cursor:default}
+.z-emo.answers-btn,.answers .z-emo{color:#1d1a16}
+.flash-good{animation:good .4s}.flash-bad{animation:bad .4s}
+@keyframes good{0%{box-shadow:0 0 0 6px var(--soc)}100%{box-shadow:0 0 0 0 transparent}}
+@keyframes bad{0%{box-shadow:0 0 0 6px var(--phys)}100%{box-shadow:0 0 0 0 transparent}}
+.feedback{min-height:26px;font-weight:600;margin-top:12px}
+
+/* result */
+.result{background:var(--paper);border-radius:12px;padding:22px;margin-top:18px;display:none}
+.result.on{display:block}
+.result h3{font-size:34px}
+
+/* learn */
+.learn{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:640px){.learn{grid-template-columns:1fr}}
+.lcard{background:var(--paper);border-radius:10px;padding:16px 18px;border-top:8px solid var(--c)}
+.lcard h2{font-size:32px;color:var(--c)}
+.lcard .feat{color:var(--muted);font-size:15px;margin:2px 0 10px}
+.lcard h3{font-size:21px;margin-top:10px}
+.lcard p{margin:4px 0 0;font-size:16px}
+.z-emo .lcard h2,.lcard.z-emo h2{color:#b08400}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .lcard.z-emo h2{color:var(--emo)}}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
-  <main class="card">
-    <h1>PE Game Test</h1>
-    <p>Enter your name and press <strong>Get my point</strong>. That's it!</p>
-    <form id="gameForm">
-      <label for="playerName">Your name</label>
-      <input id="playerName" name="playerName" type="text" placeholder="Enter your name" maxlength="60" required autocomplete="name">
-      <button type="submit">Get my point</button>
-    </form>
-    <div id="result" role="status" aria-live="polite"></div>
-    <div class="points">Score: <strong id="score">0</strong></div>
-  </main>
-<script>
-  const form = document.getElementById('gameForm');
-  const nameInput = document.getElementById('playerName');
-  const result = document.getElementById('result');
-  const scoreEl = document.getElementById('score');
-  let score = 0;
+<div class="wrap">
+  <header class="hero">
+    <h1>Match the method</h1>
+    <p>Higher PE: every factor has its own data collection methods. Sort them, race the clock, and lock them into memory.</p>
+    <div class="stripes"><span class="s-phys"></span><span class="s-ment"></span><span class="s-soc"></span><span class="s-emo"></span></div>
+  </header>
 
-  form.addEventListener('submit', function (event) {
-    event.preventDefault();
-    const name = nameInput.value.trim();
-    if (!name) {
-      nameInput.focus();
-      return;
-    }
-    score += 1;
-    scoreEl.textContent = score;
-    result.textContent = `Well done, ${name}! You earned 1 point.`;
-    result.style.display = 'block';
+  <nav class="modes" aria-label="Game modes">
+    <button data-mode="sort" aria-pressed="true">Sort the cards</button>
+    <button data-mode="quick" aria-pressed="false">Quick fire</button>
+    <button data-mode="learn" aria-pressed="false">Revise first</button>
+  </nav>
+
+  <!-- SORT -->
+  <section class="panel on" id="sort">
+    <div class="board">
+      <div class="stat"><small>Time</small><b id="s-time">0.0</b></div>
+      <div class="stat"><small>Mistakes</small><b id="s-miss">0</b></div>
+      <div class="stat"><small>Best time</small><b id="s-best">--</b></div>
+      <div class="grow"></div>
+      <button class="btn" id="s-start">Start</button>
+    </div>
+    <p class="hint">Drag each card onto its factor, or tap a card then tap a factor. Each factor takes two methods. The PPW cards only show their sub-factors, so read them carefully.</p>
+    <div class="tray" id="tray" aria-label="Cards to sort"></div>
+    <div class="zones" id="zones"></div>
+    <div class="result" id="s-result"></div>
+  </section>
+
+  <!-- QUICK FIRE -->
+  <section class="panel" id="quick">
+    <div class="board">
+      <div class="stat"><small>Time left</small><b id="q-time">45</b></div>
+      <div class="stat"><small>Score</small><b id="q-score">0</b></div>
+      <div class="stat"><small>Streak</small><b id="q-streak">0</b></div>
+      <div class="stat"><small>Best score</small><b id="q-best">--</b></div>
+      <div class="grow"></div>
+      <button class="btn" id="q-start">Start</button>
+    </div>
+    <div class="qf-stage" id="q-stage">
+      <div class="kind" id="q-kind">45 seconds. Which factor does it belong to?</div>
+      <div class="q" id="q-text">Press start</div>
+      <div class="feedback" id="q-fb" aria-live="polite"></div>
+    </div>
+    <div class="answers" id="answers"></div>
+    <div class="result" id="q-result"></div>
+  </section>
+
+  <!-- LEARN -->
+  <section class="panel" id="learn">
+    <div class="learn" id="learnGrid"></div>
+  </section>
+</div>
+
+<script>
+const FACTORS = [
+  {id:"phys", name:"Physical", feat:"Fitness, skills and tactics",
+   methods:[
+     {name:"Skill Repertoire Observation Schedule", clue:"An observer tallies successful and unsuccessful skills during a real game", sort:"Skill Repertoire Observation Schedule"},
+     {name:"Physical PPW", clue:"You rate yourself 1–10 on CRE, speed, strength and flexibility", sort:"Performance Profile Wheel", sub:"CRE, speed, strength, flexibility"}
+   ]},
+  {id:"ment", name:"Mental", feat:"Level of arousal, concentration, decision making",
+   methods:[
+     {name:"Mental Toughness Questionnaire", clue:"Scores your control, commitment, challenge and confidence", sort:"Mental Toughness Questionnaire"},
+     {name:"Mental PPW", clue:"You rate yourself 1–10 on concentration, arousal and decision making", sort:"Performance Profile Wheel", sub:"concentration, level of arousal, decision making"}
+   ]},
+  {id:"soc", name:"Social", feat:"Team dynamics, roles, communication, etiquette",
+   methods:[
+     {name:"Team Dynamics Questionnaire", clue:"Measures cohesion, communication and roles within your team", sort:"Team Dynamics Questionnaire"},
+     {name:"Social PPW", clue:"You rate yourself 1–10 on communication, etiquette and role", sort:"Performance Profile Wheel", sub:"communication, etiquette, role in team"}
+   ]},
+  {id:"emo", name:"Emotional", feat:"Happiness, anger, fear, trust",
+   methods:[
+     {name:"Profile of Mood States (POMS) Test", clue:"Scores tension, anger, vigour, fatigue, depression and confusion", sort:"Profile of Mood States Test"},
+     {name:"Emotional PPW", clue:"You rate yourself 1–10 on anger, fear, happiness and trust", sort:"Performance Profile Wheel", sub:"anger, fear, happiness, trust"}
+   ]}
+];
+const LEARN = {
+  "Skill Repertoire Observation Schedule":"An observer watches you in a full game and ticks each skill as successful or unsuccessful. It gives objective data on which skills are strengths and which need work.",
+  "Physical PPW":"You list the physical sub-factors that matter in your activity and rate yourself 1–10 on each against your ideal. The gaps show your development needs.",
+  "Mental Toughness Questionnaire":"You answer statements on a scale; scores cover control, commitment, challenge and confidence (the 4 Cs). Compare with norms to spot weaknesses.",
+  "Mental PPW":"Rate yourself 1–10 on mental sub-factors such as concentration, level of arousal and decision making, then compare with your ideal score.",
+  "Team Dynamics Questionnaire":"Players answer questions on how the team works together: cohesion, communication, roles and relationships. Shows how social factors affect performance.",
+  "Social PPW":"Rate yourself 1–10 on social sub-factors like communication, etiquette and your role in the team, against your ideal.",
+  "Profile of Mood States (POMS) Test":"A questionnaire, often done before and after performance, scoring tension, depression, anger, vigour, fatigue and confusion. The ‘iceberg profile’ shows high vigour with low negative moods.",
+  "Emotional PPW":"Rate yourself 1–10 on emotional sub-factors such as anger, fear, happiness and trust, then compare with your ideal."
+};
+const $ = s => document.querySelector(s);
+const store = {
+  get(k){ try{ return localStorage.getItem(k) }catch(e){ return null } },
+  set(k,v){ try{ localStorage.setItem(k,v) }catch(e){} }
+};
+const shuffle = a => { a=[...a]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]} return a };
+
+/* ---------- modes ---------- */
+document.querySelectorAll("nav.modes button").forEach(b=>b.addEventListener("click",()=>{
+  document.querySelectorAll("nav.modes button").forEach(x=>x.setAttribute("aria-pressed",x===b));
+  document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("on",p.id===b.dataset.mode));
+}));
+
+/* ---------- SORT ---------- */
+const tray=$("#tray"), zonesEl=$("#zones");
+let sTimer=null, sStart=0, sMiss=0, sPlaced=0, sRunning=false, selected=null;
+FACTORS.forEach(f=>{
+  const z=document.createElement("div");
+  z.className="zone z-"+f.id; z.dataset.f=f.id; z.tabIndex=0;
+  z.setAttribute("role","button"); z.setAttribute("aria-label",f.name+" factor");
+  z.innerHTML=`<h2>${f.name}</h2><div class="slot"></div>`;
+  z.addEventListener("click",()=>{ if(selected) tryPlace(selected,z) });
+  z.addEventListener("keydown",e=>{ if((e.key==="Enter"||e.key===" ")&&selected){e.preventDefault();tryPlace(selected,z)} });
+  z.addEventListener("dragover",e=>{e.preventDefault();z.classList.add("over")});
+  z.addEventListener("dragleave",()=>z.classList.remove("over"));
+  z.addEventListener("drop",e=>{e.preventDefault();z.classList.remove("over");
+    const c=document.getElementById(e.dataTransfer.getData("text/plain")); if(c) tryPlace(c,z)});
+  zonesEl.appendChild(z);
+});
+function bestSort(){ const b=store.get("pe_sort_best"); $("#s-best").textContent=b?(+b).toFixed(1):"--" }
+bestSort();
+function dealSort(){
+  tray.innerHTML=""; zonesEl.querySelectorAll(".slot").forEach(s=>s.innerHTML="");
+  const cards=[]; FACTORS.forEach(f=>f.methods.forEach((m,i)=>cards.push({f:f.id,m,id:f.id+i})));
+  shuffle(cards).forEach(c=>{
+    const el=document.createElement("div");
+    el.className="card"; el.id="c-"+c.id; el.dataset.f=c.f; el.draggable=true; el.tabIndex=0;
+    el.setAttribute("role","button");
+    el.innerHTML=c.m.sub?`${c.m.sort}<small>${c.m.sub}</small>`:c.m.sort;
+    el.dataset.label=c.m.name;
+    el.addEventListener("dragstart",e=>{ if(!sRunning||el.classList.contains("placed")){e.preventDefault();return} e.dataTransfer.setData("text/plain",el.id) });
+    const pick=()=>{ if(!sRunning||el.classList.contains("placed"))return;
+      if(selected) selected.classList.remove("sel");
+      selected = selected===el?null:el; if(selected) el.classList.add("sel") };
+    el.addEventListener("click",e=>{e.stopPropagation();pick()});
+    el.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){e.preventDefault();pick()} });
+    tray.appendChild(el);
   });
+}
+function tryPlace(card,zone){
+  if(!sRunning) return;
+  card.classList.remove("sel"); selected=null;
+  if(card.dataset.f===zone.dataset.f){
+    card.classList.add("placed"); card.draggable=false; card.tabIndex=-1;
+    card.innerHTML=card.dataset.label;
+    zone.querySelector(".slot").appendChild(card);
+    if(++sPlaced===8) finishSort();
+  } else {
+    sMiss++; $("#s-miss").textContent=sMiss;
+    card.classList.remove("shake"); void card.offsetWidth; card.classList.add("shake");
+  }
+}
+function finishSort(){
+  sRunning=false; clearInterval(sTimer);
+  const t=(performance.now()-sStart)/1000 + sMiss*3;
+  const prev=+store.get("pe_sort_best")||Infinity; const pb=t<prev;
+  if(pb) store.set("pe_sort_best",t.toFixed(1)); bestSort();
+  const r=$("#s-result");
+  r.innerHTML=`<h3>${sMiss===0?"Perfect sort":"All sorted"}</h3>
+    <p>Final time <b>${t.toFixed(1)}s</b>${sMiss?` including a ${sMiss*3}s penalty for ${sMiss} mistake${sMiss>1?"s":""}`:""}.${pb?" New personal best.":""}</p>
+    <button class="btn" id="s-again">Play again</button>`;
+  r.classList.add("on"); $("#s-again").onclick=startSort;
+  $("#s-start").textContent="Restart";
+}
+function startSort(){
+  $("#s-result").classList.remove("on");
+  sMiss=0;sPlaced=0;$("#s-miss").textContent=0; dealSort();
+  sRunning=true; sStart=performance.now(); clearInterval(sTimer);
+  sTimer=setInterval(()=>$("#s-time").textContent=((performance.now()-sStart)/1000).toFixed(1),100);
+  $("#s-start").textContent="Restart";
+}
+$("#s-start").onclick=startSort;
+dealSort();
+
+/* ---------- QUICK FIRE ---------- */
+const ans=$("#answers");
+FACTORS.forEach(f=>{
+  const b=document.createElement("button"); b.className="z-"+f.id; b.style.setProperty("--c",`var(--${f.id})`);
+  if(f.id==="emo") b.style.color="#1d1a16";
+  b.textContent=f.name; b.dataset.f=f.id; b.disabled=true;
+  b.onclick=()=>answer(f.id); ans.appendChild(b);
+});
+let qTime=45,qScore=0,qStreak=0,qTimer=null,qCur=null,qDeck=[],qWrong=[];
+function qBest(){ const b=store.get("pe_quick_best"); $("#q-best").textContent=b||"--" }
+qBest();
+function buildDeck(){
+  const d=[]; FACTORS.forEach(f=>f.methods.forEach(m=>{
+    d.push({f:f.id,kind:"Method",text:m.name});
+    d.push({f:f.id,kind:"What does it measure?",text:m.clue});
+  })); return shuffle(d);
+}
+function nextQ(){
+  if(!qDeck.length) qDeck=buildDeck();
+  qCur=qDeck.pop(); $("#q-kind").textContent=qCur.kind; $("#q-text").textContent=qCur.text;
+  $("#q-text").style.fontSize=qCur.kind==="Method"?"":"clamp(20px,3.6vw,28px)";
+}
+function answer(f){
+  if(!qCur) return; const st=$("#q-stage"); st.classList.remove("flash-good","flash-bad"); void st.offsetWidth;
+  const right=FACTORS.find(x=>x.id===qCur.f).name;
+  if(f===qCur.f){ qStreak++; qScore+= qStreak>=3?2:1; st.classList.add("flash-good");
+    $("#q-fb").textContent= qStreak>=3?`Correct. Streak bonus, +2`:"Correct";
+  } else { qStreak=0; st.classList.add("flash-bad"); qTime=Math.max(0,qTime-3);
+    $("#q-fb").textContent=`That's ${right}. Minus 3 seconds.`; qWrong.push(qCur); }
+  $("#q-score").textContent=qScore; $("#q-streak").textContent=qStreak; $("#q-time").textContent=qTime;
+  nextQ();
+}
+function startQuick(){
+  $("#q-result").classList.remove("on");
+  qTime=45;qScore=0;qStreak=0;qWrong=[];qDeck=buildDeck();
+  ["q-score","q-streak"].forEach(i=>$("#"+i).textContent=0); $("#q-time").textContent=qTime; $("#q-fb").textContent="";
+  ans.querySelectorAll("button").forEach(b=>b.disabled=false);
+  nextQ(); clearInterval(qTimer);
+  qTimer=setInterval(()=>{ qTime--; $("#q-time").textContent=Math.max(0,qTime); if(qTime<=0) endQuick() },1000);
+  $("#q-start").textContent="Restart";
+}
+function endQuick(){
+  clearInterval(qTimer); qCur=null;
+  ans.querySelectorAll("button").forEach(b=>b.disabled=true);
+  $("#q-kind").textContent="Time's up"; $("#q-text").textContent=`${qScore} points`; $("#q-text").style.fontSize="";
+  const prev=+store.get("pe_quick_best")||0; const pb=qScore>prev; if(pb) store.set("pe_quick_best",qScore); qBest();
+  const uniq=[...new Map(qWrong.map(w=>[w.text,w])).values()];
+  const r=$("#q-result");
+  r.innerHTML=`<h3>${pb?"New best score":"Round over"}</h3>
+    ${uniq.length?`<p>Revise these:</p><ul>${uniq.map(w=>`<li>${w.text} <b>→ ${FACTORS.find(x=>x.id===w.f).name}</b></li>`).join("")}</ul>`:"<p>No mistakes this round.</p>"}
+    <button class="btn" id="q-again">Play again</button>`;
+  r.classList.add("on"); $("#q-again").onclick=startQuick;
+}
+$("#q-start").onclick=startQuick;
+
+/* ---------- LEARN ---------- */
+$("#learnGrid").innerHTML=FACTORS.map(f=>`
+  <article class="lcard z-${f.id}">
+    <h2>${f.name}</h2>
+    <div class="feat">Features: ${f.feat}</div>
+    ${f.methods.map(m=>`<h3>${m.name}</h3><p>${LEARN[m.name]}</p>`).join("")}
+  </article>`).join("");
 </script>
 </body>
 </html>
