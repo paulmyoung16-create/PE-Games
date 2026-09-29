@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PE Game Test</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Arial, sans-serif; background: #f1f5f9; color: #172033; display: grid; place-items: center; min-height: 100vh; padding: 20px; }
+  .card { width: min(100%, 460px); background: white; border-radius: 18px; padding: 30px; box-shadow: 0 8px 28px #17203318; text-align: center; }
+  h1 { margin: 0 0 10px; color: #173b6c; }
+  p { line-height: 1.5; color: #4b5563; }
+  label { display: block; text-align: left; font-weight: bold; margin: 22px 0 8px; }
+  input { width: 100%; padding: 13px 14px; border: 2px solid #cbd5e1; border-radius: 10px; font-size: 16px; }
+  input:focus { outline: 3px solid #bfdbfe; border-color: #2563eb; }
+  button { width: 100%; margin-top: 14px; padding: 14px; border: 0; border-radius: 10px; background: #1d4f91; color: white; font-size: 16px; font-weight: bold; cursor: pointer; }
+  button:hover { background: #163e73; }
+  #result { display: none; margin-top: 22px; padding: 18px; border-radius: 12px; background: #dcfce7; color: #166534; font-size: 18px; font-weight: bold; }
+  .points { margin-top: 18px; font-size: 14px; color: #64748b; }
+</style>
+</head>
+<body>
+  <main class="card">
+    <h1>PE Game Test</h1>
+    <p>Enter your name and press <strong>Get my point</strong>. That's it!</p>
+    <form id="gameForm">
+      <label for="playerName">Your name</label>
+      <input id="playerName" name="playerName" type="text" placeholder="Enter your name" maxlength="60" required autocomplete="name">
+      <button type="submit">Get my point</button>
+    </form>
+    <div id="result" role="status" aria-live="polite"></div>
+    <div class="points">Score: <strong id="score">0</strong></div>
+  </main>
+<script>
+  const form = document.getElementById('gameForm');
+  const nameInput = document.getElementById('playerName');
+  const result = document.getElementById('result');
+  const scoreEl = document.getElementById('score');
+  let score = 0;
+
+  form.addEventListener('submit', function (event) {
+    event.preventDefault();
+    const name = nameInput.value.trim();
+    if (!name) {
+      nameInput.focus();
+      return;
+    }
+    score += 1;
+    scoreEl.textContent = score;
+    result.textContent = `Well done, ${name}! You earned 1 point.`;
+    result.style.display = 'block';
+  });
+</script>
+</body>
+</html>
